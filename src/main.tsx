@@ -1,0 +1,21 @@
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { registerSW } from 'virtual:pwa-register';
+import App from './App';
+import { pingActive, pingInstall } from './lib/telemetry';
+import './styles.css';
+
+// Cache the app for offline use and pick up new versions automatically.
+registerSW({ immediate: true });
+
+// Ask the browser not to evict our data when storage runs low.
+navigator.storage?.persist?.().catch(() => {});
+
+void pingActive();
+window.addEventListener('appinstalled', () => void pingInstall());
+
+createRoot(document.getElementById('root')!).render(
+	<StrictMode>
+		<App />
+	</StrictMode>,
+);

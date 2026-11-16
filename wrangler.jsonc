@@ -1,0 +1,25 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "finance-tracker",
+	"main": "worker/index.ts",
+	"compatibility_date": "2026-11-01",
+	// Only reachable through ameyapurandare.com/projects/finance-tracker/app/,
+	// which forwards to this Worker via a service binding.
+	"workers_dev": false,
+	"preview_urls": false,
+	"assets": {
+		"directory": "./dist",
+		"not_found_handling": "single-page-application",
+		"binding": "ASSETS",
+		// Every request goes through the Worker, which strips the URL prefix (see worker/base.ts).
+		"run_worker_first": true
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "finance-tracker-telemetry",
+			"database_id": "8feb30ad-64c7-4a52-85f8-2a2e00dd552d",
+			"migrations_dir": "migrations"
+		}
+	]
+}
