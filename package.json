@@ -1,7 +1,7 @@
 {
   "name": "finance-tracker",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "A private, offline-first finance tracker that keeps your data on your device",
   "type": "module",
   "scripts": {

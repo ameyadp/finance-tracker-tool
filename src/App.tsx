@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { AppIntro } from './components/AppIntro';
 import { Import } from './components/Import';
 import { InstallDialog, InstalledNotice } from './components/InstallDialog';
 import { NetWorth } from './components/NetWorth';
 import { Overview } from './components/Overview';
 import { Settings } from './components/Settings';
 import { Transactions } from './components/Transactions';
-import { installNoticeSeen, isStandalone, takeInstallRequest } from './lib/install';
+import { continueInBrowser, installNoticeSeen, isStandalone, shouldShowIntro, takeInstallRequest } from './lib/install';
 import { getConsent, setConsent } from './lib/telemetry';
 
 const TABS = [
@@ -46,6 +47,7 @@ function ConsentBanner() {
 export default function App() {
 	const [tab, setTab] = useState<TabId>(tabFromHash);
 	const [installOpen, setInstallOpen] = useState(takeInstallRequest);
+	const [introOpen, setIntroOpen] = useState(shouldShowIntro);
 	const [showInstalledNotice, setShowInstalledNotice] = useState(() => isStandalone() && !installNoticeSeen());
 	const consent = useLiveQuery(getConsent, [], undefined);
 
@@ -59,6 +61,21 @@ export default function App() {
 		window.location.hash = id;
 		window.scrollTo({ top: 0 });
 	};
+
+	if (introOpen) {
+		return (
+			<>
+				<AppIntro
+					onInstall={() => setInstallOpen(true)}
+					onContinue={() => {
+						continueInBrowser();
+						setIntroOpen(false);
+					}}
+				/>
+				{installOpen && <InstallDialog onClose={() => setInstallOpen(false)} />}
+			</>
+		);
+	}
 
 	return (
 		<div className="app">

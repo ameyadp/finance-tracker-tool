@@ -36,6 +36,9 @@ function renderApp(tab = 'overview') {
 
 beforeEach(async () => {
 	await resetDb();
+	// Most tests start past the browser overview screen, as someone who chose "Continue in browser".
+	sessionStorage.clear();
+	sessionStorage.setItem('finance-tracker:continue-in-browser', '1');
 	vi.spyOn(window, 'confirm').mockReturnValue(true);
 	vi.spyOn(window, 'alert').mockImplementation(() => {});
 	window.scrollTo = vi.fn() as never;
@@ -163,13 +166,34 @@ describe('Finance Tracker app', () => {
 	});
 });
 
+describe('overview in the browser', () => {
+	it('shows the overview first, and continues to the app when asked', async () => {
+		sessionStorage.clear();
+		const user = userEvent.setup();
+		render(<App />);
+		expect(screen.getByRole('heading', { name: 'Finance Tracker', level: 1 })).toBeTruthy();
+		expect(screen.getByRole('img', { name: 'Screenshot of Finance Tracker' })).toBeTruthy();
+		await user.click(screen.getByRole('button', { name: 'Continue in browser' }));
+		expect(await screen.findByRole('button', { name: 'Explore with sample data' })).toBeTruthy();
+		expect(sessionStorage.getItem('finance-tracker:continue-in-browser')).toBe('1');
+	});
+
+	it('opens the install screen from the overview', async () => {
+		sessionStorage.clear();
+		const user = userEvent.setup();
+		render(<App />);
+		await user.click(screen.getByRole('button', { name: 'Install app' }));
+		expect(screen.getByRole('dialog', { name: 'Install Finance Tracker' }).textContent).toMatch(/Usage counting is required/);
+	});
+});
+
 describe('installing', () => {
 	it('opens the install screen with the required notice from the website’s Install link', async () => {
 		window.history.replaceState(null, '', '/projects/finance-tracker/app/?install=1');
 		const user = userEvent.setup();
 		render(<App />);
 		const dialog = screen.getByRole('dialog', { name: 'Install Finance Tracker' });
-		expect(dialog.textContent).toMatch(/Install counting is required/);
+		expect(dialog.textContent).toMatch(/Usage counting is required/);
 		expect(window.location.search).toBe('');
 		await user.keyboard('{Escape}');
 		expect(screen.queryByRole('dialog')).toBeNull();

@@ -3,7 +3,7 @@ import { todayISO } from './dates';
 
 // Anonymous usage counting.
 //
-// Installs are always counted: the app sends "install", the app version, and a
+// Installs and app opens are always counted: the app sends "install", the app version, and a
 // one-off random number that isn't stored, so it can't be linked to anything else.
 //
 // Everything else is opt-in: a random ID kept on this device, the event name,
@@ -12,7 +12,7 @@ import { todayISO } from './dates';
 // Never any financial data, names, or amounts.
 
 export type Consent = 'granted' | 'denied';
-export type TelemetryEvent = 'active' | 'install' | 'opt_in';
+export type TelemetryEvent = 'active' | 'install' | 'opt_in' | 'open_app' | 'open_web';
 
 const PING_URL = `${import.meta.env.BASE_URL}api/ping`;
 
@@ -80,4 +80,17 @@ export async function pingInstall(): Promise<void> {
 			// ignore
 		}
 	}
+}
+
+const OPEN_COUNTED = 'finance-tracker:open-counted';
+
+/** Count one app open per session (installed app or browser tab). Always sent, without the device's ID. */
+export async function pingOpen(installed: boolean): Promise<void> {
+	try {
+		if (sessionStorage.getItem(OPEN_COUNTED)) return;
+		sessionStorage.setItem(OPEN_COUNTED, '1');
+	} catch {
+		// storage unavailable: still count
+	}
+	await post(installed ? 'open_app' : 'open_web', crypto.randomUUID());
 }
