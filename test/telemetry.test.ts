@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../src/lib/db';
 import { pingActive, pingInstall, setConsent } from '../src/lib/telemetry';
@@ -6,6 +7,7 @@ const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => new Respons
 const sent = () => fetchMock.mock.calls.map(([, init]) => JSON.parse(init!.body as string));
 
 beforeEach(async () => {
+	localStorage.clear();
 	await db.settings.clear();
 	fetchMock.mockClear();
 	vi.stubGlobal('fetch', fetchMock);
@@ -18,13 +20,13 @@ afterEach(() => {
 });
 
 describe('usage counting', () => {
-	it('always counts installs, without the device’s ID', async () => {
+	it('always counts an install, once per device, without the device’s ID', async () => {
 		await pingInstall();
 		await pingInstall();
-		const [a, b] = sent();
-		expect(a).toMatchObject({ event: 'install' });
-		expect(a.id).not.toBe(b.id);
-		expect(await db.settings.get('anonId')).toBeUndefined();
+		const events = sent();
+		expect(events).toHaveLength(1);
+		expect(events[0]).toMatchObject({ event: 'install' });
+		expect(localStorage.getItem('finance-tracker:install-counted')).toBe('1');
 	});
 
 	it('sends nothing else without consent', async () => {

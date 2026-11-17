@@ -162,3 +162,18 @@ describe('Finance Tracker app', () => {
 		expect(await screen.findByText('Where the money went')).toBeTruthy();
 	});
 });
+
+describe('installing', () => {
+	it('opens the install screen with the required notice from the website’s Install link', async () => {
+		window.history.replaceState(null, '', '/projects/finance-tracker/app/?install=1');
+		const user = userEvent.setup();
+		render(<App />);
+		const dialog = screen.getByRole('dialog', { name: 'Install Finance Tracker' });
+		expect(dialog.textContent).toMatch(/Install counting is required/);
+		expect(window.location.search).toBe('');
+		await user.keyboard('{Escape}');
+		expect(screen.queryByRole('dialog')).toBeNull();
+		await user.click(screen.getByRole('button', { name: 'Install app' }));
+		expect(screen.getByRole('dialog', { name: 'Install Finance Tracker' })).toBeTruthy();
+	});
+});

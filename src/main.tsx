@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App';
+import { isStandalone } from './lib/install';
 import { pingActive, pingInstall } from './lib/telemetry';
 import './styles.css';
 
@@ -13,6 +14,8 @@ navigator.storage?.persist?.().catch(() => {});
 
 void pingActive();
 window.addEventListener('appinstalled', () => void pingInstall());
+// iPhone/iPad and Safari never fire "appinstalled", so also count on the first launch as an installed app.
+if (isStandalone()) void pingInstall();
 
 createRoot(document.getElementById('root')!).render(
 	<StrictMode>

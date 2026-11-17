@@ -9,6 +9,7 @@ const env = {
 	ASSETS: {
 		fetch: async (r: Request) => {
 			const p = new URL(r.url).pathname;
+			if (p === '/index.html' || p === '/folder') return new Response(null, { status: 307, headers: { Location: p === '/folder' ? '/folder/' : '/' } });
 			return p === '/' || p.startsWith('/assets/app') ? new Response(`asset:${p}`) : new Response('missing', { status: 404 });
 		},
 	} as never,
@@ -21,6 +22,15 @@ describe('worker routing', () => {
 		expect(await (await call('/')).text()).toBe('asset:/');
 		expect(await (await call('/assets/app.js')).text()).toBe('asset:/assets/app.js');
 		expect((await call('')).status).toBe(301);
+	});
+
+	it('serves index.html as the app page and keeps redirects inside the app', async () => {
+		const index = await call('/index.html');
+		expect(index.status).toBe(200);
+		expect(await index.text()).toBe('asset:/');
+		const redirect = await call('/folder');
+		expect(redirect.status).toBe(307);
+		expect(redirect.headers.get('Location')).toBe(`${BASE}/folder/`);
 	});
 
 	it('shows the app for unknown page addresses but 404s for missing files', async () => {

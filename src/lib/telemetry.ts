@@ -64,7 +64,20 @@ export async function pingActive(): Promise<void> {
 	if (await send('active')) await setSetting('lastPingDay', today);
 }
 
-/** Count an install. Always sent, without the device's ID. */
+const INSTALL_COUNTED = 'finance-tracker:install-counted';
+
+/** Count an install, once per device. Always sent, without the device's ID. */
 export async function pingInstall(): Promise<void> {
-	await post('install', crypto.randomUUID());
+	try {
+		if (localStorage.getItem(INSTALL_COUNTED)) return;
+	} catch {
+		// storage unavailable: still count
+	}
+	if (await post('install', crypto.randomUUID())) {
+		try {
+			localStorage.setItem(INSTALL_COUNTED, '1');
+		} catch {
+			// ignore
+		}
+	}
 }

@@ -800,3 +800,53 @@ details {
 	color: var(--negative);
 	background: none;
 }
+
+/* ---------- Install dialog ---------- */
+
+.dialog-backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.45);
+	display: grid;
+	place-items: center;
+	padding: 16px;
+	z-index: 50;
+}
+
+.dialog {
+	width: 100%;
+	max-width: 460px;
+	max-height: calc(100vh - 32px);
+	overflow-y: auto;
+	background: var(--surface);
+	color: var(--text);
+	border-radius: 14px;
+	padding: 20px;
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.dialog h2 {
+	margin: 0 0 8px;
+	font-size: 1.2rem;
+}
+
+.dialog p {
+	margin: 0 0 12px;
+}
+
+.install-steps {
+	margin: 0 0 12px;
+	padding-left: 1.25em;
+}
+
+.install-steps li {
+	margin-bottom: 6px;
+}
+
+.install-notice {
+	font-size: 0.9rem;
+	padding: 10px 12px;
+	border-radius: 10px;
+	border: 1px solid var(--border);
+	background: var(--bg);
+}
