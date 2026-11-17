@@ -1,11 +1,15 @@
 import { db, getSetting, setSetting } from './db';
 import { todayISO } from './dates';
 
-// Anonymous, opt-in usage counting.
+// Anonymous usage counting.
 //
-// What is sent (only if the user opts in): a random ID created on this device,
-// the event name, and the app version. Never any financial data, names, or
-// amounts. At most one "active" ping per day.
+// Installs are always counted: the app sends "install", the app version, and a
+// one-off random number that isn't stored, so it can't be linked to anything else.
+//
+// Everything else is opt-in: a random ID kept on this device, the event name,
+// and the app version, with at most one "active" ping per day.
+//
+// Never any financial data, names, or amounts.
 
 export type Consent = 'granted' | 'denied';
 export type TelemetryEvent = 'active' | 'install' | 'opt_in';
@@ -23,13 +27,13 @@ async function anonId(): Promise<string> {
 	return id;
 }
 
-async function send(event: TelemetryEvent): Promise<boolean> {
+async function post(event: TelemetryEvent, id: string): Promise<boolean> {
 	if (import.meta.env.DEV) return false;
 	try {
 		const res = await fetch(PING_URL, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ id: await anonId(), event, v: __APP_VERSION__ }),
+			body: JSON.stringify({ id, event, v: __APP_VERSION__ }),
 			keepalive: true,
 		});
 		return res.ok;
@@ -37,6 +41,8 @@ async function send(event: TelemetryEvent): Promise<boolean> {
 		return false; // Offline or blocked: usage counting is best-effort.
 	}
 }
+
+const send = async (event: TelemetryEvent) => post(event, await anonId());
 
 export async function setConsent(consent: Consent): Promise<void> {
 	await setSetting('telemetryConsent', consent);
@@ -58,6 +64,7 @@ export async function pingActive(): Promise<void> {
 	if (await send('active')) await setSetting('lastPingDay', today);
 }
 
+/** Count an install. Always sent, without the device's ID. */
 export async function pingInstall(): Promise<void> {
-	if ((await getConsent()) === 'granted') await send('install');
+	await post('install', crypto.randomUUID());
 }

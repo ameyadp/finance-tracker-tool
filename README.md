@@ -13,7 +13,12 @@ A private, offline-first finance tracker. Install it from the browser like an ap
 
 There are no accounts, no cloud sync, and no bank logins. Your transactions and balances are stored in your browser's IndexedDB and never leave your device.
 
-The app can optionally send an **anonymous, opt-in** usage count: a random ID generated on the device, the app version, and an event name (`opt_in`, `active` at most once a day, or `install`). It never sends amounts, descriptions, account names or any other financial data. Users choose on first launch and can change it in Settings.
+Usage counting is anonymous:
+
+- **Installs are always counted.** The app sends `install`, the app version and a one-off random number that isn't stored, so an install can't be linked to anything else.
+- **Everything else is opt-in.** The app sends a random ID kept on the device, the app version and an event (`opt_in`, or `active` at most once a day). Users choose on first launch and can change it in Settings.
+
+It never sends amounts, descriptions, account names or any other financial data.
 
 ## Development
 

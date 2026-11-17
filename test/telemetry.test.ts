@@ -1,0 +1,47 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { db } from '../src/lib/db';
+import { pingActive, pingInstall, setConsent } from '../src/lib/telemetry';
+
+const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => new Response(null, { status: 204 }));
+const sent = () => fetchMock.mock.calls.map(([, init]) => JSON.parse(init!.body as string));
+
+beforeEach(async () => {
+	await db.settings.clear();
+	fetchMock.mockClear();
+	vi.stubGlobal('fetch', fetchMock);
+	vi.stubEnv('DEV', false);
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
+	vi.unstubAllEnvs();
+});
+
+describe('usage counting', () => {
+	it('always counts installs, without the device’s ID', async () => {
+		await pingInstall();
+		await pingInstall();
+		const [a, b] = sent();
+		expect(a).toMatchObject({ event: 'install' });
+		expect(a.id).not.toBe(b.id);
+		expect(await db.settings.get('anonId')).toBeUndefined();
+	});
+
+	it('sends nothing else without consent', async () => {
+		await pingActive();
+		await setConsent('denied');
+		await pingActive();
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
+	it('sends opt-in events with a stable anonymous ID once consent is given', async () => {
+		await setConsent('granted');
+		await pingActive(); // already pinged today: skipped
+		const events = sent();
+		expect(events.map((e) => e.event)).toEqual(['opt_in', 'active']);
+		expect(events[0].id).toBe(events[1].id);
+
+		await pingInstall();
+		expect(sent()[2].id).not.toBe(events[0].id);
+	});
+});

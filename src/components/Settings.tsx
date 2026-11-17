@@ -182,7 +182,8 @@ export function Settings() {
 				</label>
 				<p className="muted small">
 					If on, the app sends a random ID, the app version, and the word “active” once a day when you open it, so the
-					developer can see how many people use it. Never any amounts, descriptions, or personal details.
+					developer can see how many people use it. Never any amounts, descriptions, or personal details. Installing the app
+					is always counted, as just the word “install” and the app version, with no ID.
 				</p>
 			</section>
 
