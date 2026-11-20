@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { AppIntro } from './components/AppIntro';
+import { RegistrationGate } from './components/RegistrationForm';
+import { isRegistered } from './lib/registration';
 import { Import } from './components/Import';
 import { InstallDialog, InstalledNotice } from './components/InstallDialog';
 import { NetWorth } from './components/NetWorth';
@@ -48,6 +50,8 @@ export default function App() {
 	const [tab, setTab] = useState<TabId>(tabFromHash);
 	const [installOpen, setInstallOpen] = useState(takeInstallRequest);
 	const [introOpen, setIntroOpen] = useState(shouldShowIntro);
+	// Installed apps require the sign-up once per device before they can be used.
+	const [needsRegistration, setNeedsRegistration] = useState(() => isStandalone() && !isRegistered());
 	const [showInstalledNotice, setShowInstalledNotice] = useState(() => isStandalone() && !installNoticeSeen());
 	const consent = useLiveQuery(getConsent, [], undefined);
 
@@ -61,6 +65,8 @@ export default function App() {
 		window.location.hash = id;
 		window.scrollTo({ top: 0 });
 	};
+
+	if (needsRegistration) return <RegistrationGate onDone={() => setNeedsRegistration(false)} />;
 
 	if (introOpen) {
 		return (

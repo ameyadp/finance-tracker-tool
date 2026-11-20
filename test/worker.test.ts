@@ -6,6 +6,7 @@ const BASE = 'https://ameyapurandare.com/projects/finance-tracker/app';
 // Fake static files: "/" and anything under /assets/app exist; everything else is missing.
 const env = {
 	DB: {} as never,
+	REGISTER_LIMITER: { limit: async () => ({ success: true }) } as never,
 	ASSETS: {
 		fetch: async (r: Request) => {
 			const p = new URL(r.url).pathname;

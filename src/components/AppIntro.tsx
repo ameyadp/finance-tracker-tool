@@ -5,7 +5,7 @@ const FEATURES: { title: string; text: string }[] = [
 	{ title: 'Monthly overview', text: 'Income, spending and savings each month, where the money went, and a 6-month trend.' },
 	{ title: 'Import from your bank', text: 'Drop in a CSV export. Columns are detected, duplicates skipped, and your categories remembered.' },
 	{ title: 'Net worth over time', text: 'Track what you own and owe, update balances, and watch the trend.' },
-	{ title: 'Private by design', text: 'No accounts, no cloud, no bank logins. Everything stays on this device, with backup and restore.' },
+	{ title: 'Private by design', text: 'No cloud and no bank logins. Your financial data stays on this device, with backup and restore.' },
 ];
 
 export function AppIntro({ onInstall, onContinue }: { onInstall: () => void; onContinue: () => void }) {
@@ -29,7 +29,7 @@ export function AppIntro({ onInstall, onContinue }: { onInstall: () => void; onC
 			</div>
 			<p className="intro-why">
 				Installing is the best way to use it regularly: it opens in its own window from your dock, start menu or home screen, and
-				works offline. Free, no sign-up.
+				works offline. Free; installing takes a one-time sign-up.
 			</p>
 
 			<img
@@ -49,7 +49,7 @@ export function AppIntro({ onInstall, onContinue }: { onInstall: () => void; onC
 				))}
 			</ul>
 
-			<p className="intro-foot">🔒 Your financial data is stored only on your device. Installs and app opens are counted anonymously (no ID, none of your data).</p>
+			<p className="intro-foot">🔒 Your financial data is stored only on your device. Installing asks once for your name, email and location; installs and app opens are also counted anonymously.</p>
 		</div>
 	);
 }

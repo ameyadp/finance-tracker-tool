@@ -180,6 +180,7 @@ describe('overview in the browser', () => {
 
 	it('opens the install screen from the overview', async () => {
 		sessionStorage.clear();
+		localStorage.setItem('finance-tracker:registered', '1');
 		const user = userEvent.setup();
 		render(<App />);
 		await user.click(screen.getByRole('button', { name: 'Install app' }));
@@ -189,6 +190,7 @@ describe('overview in the browser', () => {
 
 describe('installing', () => {
 	it('opens the install screen with the required notice from the website’s Install link', async () => {
+		localStorage.setItem('finance-tracker:registered', '1');
 		window.history.replaceState(null, '', '/projects/finance-tracker/app/?install=1');
 		const user = userEvent.setup();
 		render(<App />);
@@ -199,5 +201,69 @@ describe('installing', () => {
 		expect(screen.queryByRole('dialog')).toBeNull();
 		await user.click(screen.getByRole('button', { name: 'Install app' }));
 		expect(screen.getByRole('dialog', { name: 'Install Finance Tracker' })).toBeTruthy();
+	});
+});
+
+describe('install sign-up', () => {
+	afterEach(() => {
+		localStorage.removeItem('finance-tracker:registered');
+		// @ts-expect-error test cleanup of a jsdom gap
+		delete window.matchMedia;
+	});
+
+	it('asks for name, email and location before install instructions', async () => {
+		localStorage.removeItem('finance-tracker:registered');
+		const posted: unknown[] = [];
+		vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+			if (String(url).endsWith('/api/register')) {
+				posted.push(JSON.parse(String(init?.body)));
+				return Response.json({ ok: true }, { status: 201 });
+			}
+			return new Response(null, { status: 204 });
+		}));
+		window.history.replaceState(null, '', '/projects/finance-tracker/app/?install=1');
+		const user = userEvent.setup();
+		render(<App />);
+		const dialog = screen.getByRole('dialog', { name: 'Install Finance Tracker' });
+		expect(dialog.textContent).toMatch(/Step 1 of 2/);
+		expect(dialog.textContent).toMatch(/support@ameyapurandare.com/);
+		await user.type(screen.getByLabelText('Name'), 'Ada Lovelace');
+		await user.type(screen.getByLabelText('Email'), 'ada@example.com');
+		await user.type(screen.getByLabelText('Location'), 'London, UK');
+		await user.click(screen.getByRole('button', { name: 'Continue to install' }));
+		expect(await screen.findByText(/Usage counting is required/)).toBeTruthy();
+		expect(posted).toEqual([{ name: 'Ada Lovelace', email: 'ada@example.com', location: 'London, UK', website: '' }]);
+		expect(localStorage.getItem('finance-tracker:registered')).toBe('1');
+		vi.unstubAllGlobals();
+	});
+
+	it('shows sign-up errors from the server', async () => {
+		localStorage.removeItem('finance-tracker:registered');
+		vi.stubGlobal('fetch', vi.fn(async () => Response.json({ error: 'Please enter a valid email address.' }, { status: 400 })));
+		window.history.replaceState(null, '', '/projects/finance-tracker/app/?install=1');
+		const user = userEvent.setup();
+		render(<App />);
+		await user.type(screen.getByLabelText('Name'), 'Ada');
+		await user.type(screen.getByLabelText('Email'), 'ada@x.io');
+		await user.type(screen.getByLabelText('Location'), 'London');
+		await user.click(screen.getByRole('button', { name: 'Continue to install' }));
+		expect((await screen.findByRole('alert')).textContent).toMatch(/valid email/);
+		expect(localStorage.getItem('finance-tracker:registered')).toBeNull();
+		vi.unstubAllGlobals();
+	});
+
+	it('blocks the installed app until the person signs up on this device', async () => {
+		localStorage.removeItem('finance-tracker:registered');
+		window.matchMedia = ((q: string) => ({ matches: q.includes('standalone'), media: q, addEventListener() {}, removeEventListener() {} })) as never;
+		vi.stubGlobal('fetch', vi.fn(async () => Response.json({ ok: true }, { status: 201 })));
+		const user = userEvent.setup();
+		render(<App />);
+		expect(screen.getByRole('heading', { name: 'Welcome to Finance Tracker' })).toBeTruthy();
+		await user.type(screen.getByLabelText('Name'), 'Ada');
+		await user.type(screen.getByLabelText('Email'), 'ada@example.com');
+		await user.type(screen.getByLabelText('Location'), 'London');
+		await user.click(screen.getByRole('button', { name: 'Start using the app' }));
+		await waitFor(() => expect(screen.queryByRole('heading', { name: 'Welcome to Finance Tracker' })).toBeNull());
+		vi.unstubAllGlobals();
 	});
 });

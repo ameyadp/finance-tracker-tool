@@ -1,8 +1,11 @@
 import { BASE_PATH } from './base';
 import { parsePing } from './ping';
+import { handleRegister } from './register';
 
-// Serves the app's static files under BASE_PATH, plus one endpoint that records
-// anonymous, opt-in usage pings. No financial data ever reaches this Worker.
+// Serves the app's static files under BASE_PATH, plus two endpoints:
+//   POST api/ping      anonymous usage counts
+//   POST api/register  the install sign-up form (name, email, location)
+// No financial data ever reaches this Worker.
 //
 // Requests arrive from the ameyapurandare.com Worker, which forwards everything
 // under BASE_PATH here via a service binding.
@@ -10,6 +13,7 @@ import { parsePing } from './ping';
 interface Env {
 	DB: D1Database;
 	ASSETS: Fetcher;
+	REGISTER_LIMITER: RateLimit;
 }
 
 const MAX_BODY_BYTES = 512;
@@ -55,6 +59,7 @@ export default {
 			if (request.method !== 'POST') return new Response(null, { status: 405, headers: { Allow: 'POST' } });
 			return handlePing(request, env);
 		}
+		if (path === '/api/register') return handleRegister(request, env.DB, env.REGISTER_LIMITER);
 		if (path.startsWith('/api/')) return new Response(null, { status: 404 });
 
 		// The built files sit at the root of dist/, so strip the prefix before looking them up.

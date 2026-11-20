@@ -170,7 +170,7 @@ export function Settings() {
 			<section className="card">
 				<h2>Privacy</h2>
 				<p className="small">
-					Your financial data never leaves this device. There are no accounts, no cloud sync, and no bank logins.
+					Your financial data never leaves this device: no cloud sync and no bank logins. Installing the app asks once for your name, email and location, which are kept separately and never linked to your financial data.
 				</p>
 				<label className="checkbox">
 					<input

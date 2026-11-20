@@ -20,6 +20,14 @@
 		// Every request goes through the Worker, which strips the URL prefix (see worker/base.ts).
 		"run_worker_first": true
 	},
+	// Limits how often one visitor can submit the install sign-up form.
+	"ratelimits": [
+		{
+			"name": "REGISTER_LIMITER",
+			"namespace_id": "1002",
+			"simple": { "limit": 5, "period": 60 }
+		}
+	],
 	"d1_databases": [
 		{
 			"binding": "DB",
