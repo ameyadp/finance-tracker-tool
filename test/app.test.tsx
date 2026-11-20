@@ -35,6 +35,7 @@ function renderApp(tab = 'overview') {
 }
 
 beforeEach(async () => {
+	localStorage.removeItem('finance-tracker:installed');
 	await resetDb();
 	// Most tests start past the browser overview screen, as someone who chose "Continue in browser".
 	sessionStorage.clear();
@@ -61,11 +62,11 @@ describe('Finance Tracker app', () => {
 		expect(screen.getByText('Groceries')).toBeTruthy();
 	});
 
-	it('asks for usage consent once and remembers the answer', async () => {
-		const user = renderApp();
-		await user.click(await screen.findByRole('button', { name: 'No thanks' }));
-		await waitFor(() => expect(screen.queryByRole('region', { name: 'Usage sharing' })).toBeNull());
-		expect((await db.settings.get('telemetryConsent'))?.value).toBe('denied');
+	it('shows no usage-sharing prompt: counts are required and explained before first use', async () => {
+		renderApp();
+		await screen.findByRole('main');
+		expect(screen.queryByRole('region', { name: 'Usage sharing' })).toBeNull();
+		expect(screen.queryByRole('button', { name: 'No thanks' })).toBeNull();
 	});
 
 	it('adds and edits a transaction', async () => {

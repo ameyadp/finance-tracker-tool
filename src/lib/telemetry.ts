@@ -6,7 +6,7 @@ import { todayISO } from './dates';
 // Installs and app opens are always counted: the app sends "install", the app version, and a
 // one-off random number that isn't stored, so it can't be linked to anything else.
 //
-// Everything else is opt-in: a random ID kept on this device, the event name,
+// Also required to use the app (shown before first use): a random ID kept on this device, the event name,
 // and the app version, with at most one "active" ping per day.
 //
 // Never any financial data, names, or amounts.
@@ -16,7 +16,8 @@ export type TelemetryEvent = 'active' | 'install' | 'opt_in' | 'open_app' | 'ope
 
 const PING_URL = `${import.meta.env.BASE_URL}api/ping`;
 
-export const getConsent = () => getSetting<Consent | null>('telemetryConsent', null);
+/** Usage counts are required to use the app, so consent is always granted. */
+export const getConsent = async (): Promise<Consent | null> => 'granted';
 
 async function anonId(): Promise<string> {
 	let id = await getSetting<string | null>('anonId', null);
@@ -56,11 +57,12 @@ export async function setConsent(consent: Consent): Promise<void> {
 	}
 }
 
-/** Record that the app was opened today (once per day, only with consent). */
+/** Record that the app was opened today (once per day). */
 export async function pingActive(): Promise<void> {
-	if ((await getConsent()) !== 'granted') return;
 	const today = todayISO();
 	if ((await getSetting<string | null>('lastPingDay', null)) === today) return;
+	// First daily count from this device: also count it as a new device.
+	if (!(await getSetting<string | null>('anonId', null))) await send('opt_in');
 	if (await send('active')) await setSetting('lastPingDay', today);
 }
 

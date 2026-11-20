@@ -4,7 +4,6 @@ import { useCategories, useCurrency, useToast } from '../hooks';
 import { createBackup, restoreBackup, validateBackup } from '../lib/backup';
 import { type CategoryKind, DEFAULT_CATEGORIES, db, setSetting } from '../lib/db';
 import { todayISO } from '../lib/dates';
-import { type Consent, getConsent, setConsent } from '../lib/telemetry';
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'INR', 'CAD', 'AUD', 'JPY', 'CHF', 'SGD', 'NZD', 'MXN', 'BRL'];
 
@@ -73,7 +72,6 @@ function Categories() {
 
 export function Settings() {
 	const currency = useCurrency();
-	const consent = useLiveQuery(getConsent, [], null);
 	const [toast, setToast] = useToast();
 	const [persisted, setPersisted] = useState<boolean | null>(null);
 
@@ -172,18 +170,8 @@ export function Settings() {
 				<p className="small">
 					Your financial data never leaves this device: no cloud sync and no bank logins. Installing the app asks once for your name, email and location, which are kept separately and never linked to your financial data.
 				</p>
-				<label className="checkbox">
-					<input
-						type="checkbox"
-						checked={consent === 'granted'}
-						onChange={(e) => void setConsent((e.target.checked ? 'granted' : 'denied') as Consent)}
-					/>
-					Share anonymous usage counts
-				</label>
 				<p className="muted small">
-					If on, the app sends a random ID, the app version, and the word “active” once a day when you open it, so the
-					developer can see how many people use it. Never any amounts, descriptions, or personal details. Installing and
-					opening the app (and reaching the end of the free browser trial) are always counted, as just the event and the app version, with no ID.
+					📊 Using Finance Tracker includes anonymous usage counts, and this is required: each install and app open, plus once a day a random ID, the app version and the word “active”, so I can see how many people use it. Never any amounts, descriptions or personal details. Reaching the end of the free browser trial is also counted, with no ID.
 				</p>
 			</section>
 

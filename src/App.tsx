@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { AppIntro } from './components/AppIntro';
 import { type GateReason, RegistrationGate, TrialBanner } from './components/RegistrationForm';
 import { isRegistered } from './lib/registration';
@@ -10,8 +9,9 @@ import { NetWorth } from './components/NetWorth';
 import { Overview } from './components/Overview';
 import { Settings } from './components/Settings';
 import { Transactions } from './components/Transactions';
-import { continueInBrowser, installNoticeSeen, isStandalone, shouldShowIntro, takeInstallRequest } from './lib/install';
-import { getConsent, setConsent, pingTrialEnded } from './lib/telemetry';
+import { continueInBrowser, installNoticeSeen, isInstalled, isStandalone, shouldShowIntro, takeInstallRequest } from './lib/install';
+import { SiteNav } from './components/SiteNav';
+import { pingTrialEnded } from './lib/telemetry';
 
 const TABS = [
 	{ id: 'overview', label: 'Overview' },
@@ -28,24 +28,6 @@ const tabFromHash = (): TabId => {
 	return (TABS.find((t) => t.id === id)?.id ?? 'overview') as TabId;
 };
 
-function ConsentBanner() {
-	return (
-		<aside className="banner" role="region" aria-label="Usage sharing">
-			<p>
-				<strong>Help decide if this app is worth building further?</strong> Share an anonymous daily “app opened” count.
-				No financial data, ever. You can change this in Settings.
-			</p>
-			<div className="actions">
-				<button type="button" onClick={() => void setConsent('granted')}>
-					Share anonymous counts
-				</button>
-				<button type="button" className="secondary" onClick={() => void setConsent('denied')}>
-					No thanks
-				</button>
-			</div>
-		</aside>
-	);
-}
 
 export default function App() {
 	const [tab, setTab] = useState<TabId>(tabFromHash);
@@ -72,7 +54,6 @@ export default function App() {
 		setTrialSession(null);
 	};
 	const [showInstalledNotice, setShowInstalledNotice] = useState(() => isStandalone() && !installNoticeSeen());
-	const consent = useLiveQuery(getConsent, [], undefined);
 
 	useEffect(() => {
 		const onHash = () => setTab(tabFromHash());
@@ -91,7 +72,7 @@ export default function App() {
 				<RegistrationGate
 					reason={gate}
 					onDone={finishSignUp}
-					onInstall={gate === 'installed' ? undefined : () => setInstallOpen(true)}
+					onInstall={gate === 'installed' || isInstalled() ? undefined : () => setInstallOpen(true)}
 					onCancel={gate === 'voluntary' ? () => setGate(null) : undefined}
 				/>
 				{installOpen && <InstallDialog onClose={() => setInstallOpen(false)} />}
@@ -119,12 +100,13 @@ export default function App() {
 
 	return (
 		<div className="app">
+			<SiteNav />
 			<header className="topbar">
 				<div className="brand">
 					<img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width={28} height={28} />
 					<span>Finance Tracker</span>
 				</div>
-				{!isStandalone() && (
+				{!isInstalled() && (
 					<button type="button" className="secondary small" onClick={() => setInstallOpen(true)}>
 						Install app
 					</button>
@@ -141,10 +123,9 @@ export default function App() {
 
 			<main>
 				{trialSession !== null && trialSession <= TRIAL_SESSIONS && (
-					<TrialBanner session={trialSession} total={TRIAL_SESSIONS} onSignUp={() => setGate('voluntary')} onInstall={() => setInstallOpen(true)} />
+					<TrialBanner session={trialSession} total={TRIAL_SESSIONS} onSignUp={() => setGate('voluntary')} onInstall={isInstalled() ? undefined : () => setInstallOpen(true)} />
 				)}
 				{showInstalledNotice && <InstalledNotice onClose={() => setShowInstalledNotice(false)} />}
-				{consent === null && <ConsentBanner />}
 				{tab === 'overview' && <Overview go={go} />}
 				{tab === 'transactions' && <Transactions />}
 				{tab === 'import' && <Import go={go} />}
