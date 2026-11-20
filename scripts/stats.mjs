@@ -28,6 +28,7 @@ const sections = [
 		'Totals',
 		`SELECT
 			(SELECT COUNT(*) FROM events WHERE event IN ('open_app', 'open_web') AND day >= date('now', '-6 days')) AS opens_last_7_days,
+			(SELECT COUNT(*) FROM events WHERE event = 'trial_ended') AS browser_trials_ended,
 			(SELECT COUNT(DISTINCT anon_id) FROM events WHERE event = 'opt_in')  AS opted_in_devices,
 			(SELECT COUNT(DISTINCT anon_id) FROM events WHERE event = 'install') AS installs,
 			(SELECT COUNT(DISTINCT anon_id) FROM events WHERE event = 'active' AND day >= date('now', '-6 days'))  AS weekly_active,

@@ -12,7 +12,7 @@ import { todayISO } from './dates';
 // Never any financial data, names, or amounts.
 
 export type Consent = 'granted' | 'denied';
-export type TelemetryEvent = 'active' | 'install' | 'opt_in' | 'open_app' | 'open_web';
+export type TelemetryEvent = 'active' | 'install' | 'opt_in' | 'open_app' | 'open_web' | 'trial_ended';
 
 const PING_URL = `${import.meta.env.BASE_URL}api/ping`;
 
@@ -93,4 +93,22 @@ export async function pingOpen(installed: boolean): Promise<void> {
 		// storage unavailable: still count
 	}
 	await post(installed ? 'open_app' : 'open_web', crypto.randomUUID());
+}
+
+const TRIAL_END_COUNTED = 'finance-tracker:trial-end-counted';
+
+/** Count a browser reaching the end of its free trial, once per device. Always sent, without the device's ID. */
+export async function pingTrialEnded(): Promise<void> {
+	try {
+		if (localStorage.getItem(TRIAL_END_COUNTED)) return;
+	} catch {
+		// storage unavailable: still count
+	}
+	if (await post('trial_ended', crypto.randomUUID())) {
+		try {
+			localStorage.setItem(TRIAL_END_COUNTED, '1');
+		} catch {
+			// ignore
+		}
+	}
 }

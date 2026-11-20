@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '../src/lib/db';
-import { pingActive, pingInstall, pingOpen, setConsent } from '../src/lib/telemetry';
+import { pingActive, pingInstall, pingOpen, pingTrialEnded, setConsent } from '../src/lib/telemetry';
 
 const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => new Response(null, { status: 204 }));
 const sent = () => fetchMock.mock.calls.map(([, init]) => JSON.parse(init!.body as string));
@@ -20,6 +20,16 @@ afterEach(() => {
 });
 
 describe('usage counting', () => {
+	it('always counts a browser trial ending, once per device, without the device’s ID', async () => {
+		localStorage.removeItem('finance-tracker:trial-end-counted');
+		await pingTrialEnded();
+		await pingTrialEnded();
+		const events = sent();
+		expect(events.map((e) => e.event)).toEqual(['trial_ended']);
+		expect(localStorage.getItem('finance-tracker:trial-end-counted')).toBe('1');
+		expect(localStorage.getItem('finance-tracker:anon-id')).toBeNull();
+	});
+
 	it('always counts one open per session, without the device’s ID, split by installed app vs browser', async () => {
 		sessionStorage.clear();
 		await pingOpen(false);

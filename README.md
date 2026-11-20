@@ -15,7 +15,7 @@ There are no accounts, no cloud sync, and no bank logins. Your transactions and 
 
 Usage counting is anonymous:
 
-- **Installs and opens are always counted.** The app sends `install` (once per device) or `open_app` / `open_web` (once per session, installed app vs. browser tab), the app version and a one-off random number that isn't stored, so a count can't be linked to anything else.
+- **Installs and opens are always counted.** The app sends `install` (once per device) or `open_app` / `open_web` (once per session, installed app vs. browser tab) or `trial_ended` (once per device, when a browser uses up its 3 free sessions), the app version and a one-off random number that isn't stored, so a count can't be linked to anything else.
 - **Everything else is opt-in.** The app sends a random ID kept on the device, the app version and an event (`opt_in`, or `active` at most once a day). Users choose on first launch and can change it in Settings.
 
 It never sends amounts, descriptions, account names or any other financial data.

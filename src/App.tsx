@@ -11,7 +11,7 @@ import { Overview } from './components/Overview';
 import { Settings } from './components/Settings';
 import { Transactions } from './components/Transactions';
 import { continueInBrowser, installNoticeSeen, isStandalone, shouldShowIntro, takeInstallRequest } from './lib/install';
-import { getConsent, setConsent } from './lib/telemetry';
+import { getConsent, setConsent, pingTrialEnded } from './lib/telemetry';
 
 const TABS = [
 	{ id: 'overview', label: 'Overview' },
@@ -63,6 +63,10 @@ export default function App() {
 	);
 	const [gate, setGate] = useState<GateReason | null>(access.gate);
 	const [trialSession, setTrialSession] = useState<number | null>(access.session);
+	// Anonymous count (once per device) of browsers that used up their free trial.
+	useEffect(() => {
+		if (gate === 'trial-ended') void pingTrialEnded();
+	}, [gate]);
 	const finishSignUp = () => {
 		setGate(null);
 		setTrialSession(null);
