@@ -9,8 +9,9 @@ import { NetWorth } from './components/NetWorth';
 import { Overview } from './components/Overview';
 import { Settings } from './components/Settings';
 import { Transactions } from './components/Transactions';
-import { continueInBrowser, installNoticeSeen, isInstalled, isStandalone, shouldShowIntro, takeInstallRequest, installLabel } from './lib/install';
+import { continueInBrowser, installNoticeSeen, isStandalone, shouldShowIntro, takeInstallRequest, installLabel } from './lib/install';
 import { SiteNav } from './components/SiteNav';
+import { useInstalled } from './lib/useInstalled';
 import { pingTrialEnded } from './lib/telemetry';
 
 const TABS = [
@@ -30,6 +31,7 @@ const tabFromHash = (): TabId => {
 
 
 export default function App() {
+	const installed = useInstalled();
 	const [tab, setTab] = useState<TabId>(tabFromHash);
 	const [installOpen, setInstallOpen] = useState(takeInstallRequest);
 	const [introOpen, setIntroOpen] = useState(shouldShowIntro);
@@ -72,7 +74,7 @@ export default function App() {
 				<RegistrationGate
 					reason={gate}
 					onDone={finishSignUp}
-					onInstall={gate === 'installed' || isInstalled() ? undefined : () => setInstallOpen(true)}
+					onInstall={gate === 'installed' || installed ? undefined : () => setInstallOpen(true)}
 					onCancel={gate === 'voluntary' ? () => setGate(null) : undefined}
 				/>
 				{installOpen && <InstallDialog onClose={() => setInstallOpen(false)} />}
@@ -106,7 +108,7 @@ export default function App() {
 					<img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width={28} height={28} />
 					<span>Finance Tracker</span>
 				</div>
-				{!isInstalled() && (
+				{!installed && (
 					<button type="button" className="secondary small" onClick={() => setInstallOpen(true)}>
 						{installLabel()}
 					</button>
@@ -123,7 +125,7 @@ export default function App() {
 
 			<main>
 				{trialSession !== null && trialSession <= TRIAL_SESSIONS && (
-					<TrialBanner session={trialSession} total={TRIAL_SESSIONS} onSignUp={() => setGate('voluntary')} onInstall={isInstalled() ? undefined : () => setInstallOpen(true)} />
+					<TrialBanner session={trialSession} total={TRIAL_SESSIONS} onSignUp={() => setGate('voluntary')} onInstall={installed ? undefined : () => setInstallOpen(true)} />
 				)}
 				{showInstalledNotice && <InstalledNotice onClose={() => setShowInstalledNotice(false)} />}
 				{tab === 'overview' && <Overview go={go} />}
