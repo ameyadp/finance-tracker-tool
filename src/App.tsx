@@ -9,7 +9,7 @@ import { NetWorth } from './components/NetWorth';
 import { Overview } from './components/Overview';
 import { Settings } from './components/Settings';
 import { Transactions } from './components/Transactions';
-import { continueInBrowser, installNoticeSeen, isInstalled, isStandalone, shouldShowIntro, takeInstallRequest } from './lib/install';
+import { continueInBrowser, installNoticeSeen, isInstalled, isStandalone, shouldShowIntro, takeInstallRequest, installLabel } from './lib/install';
 import { SiteNav } from './components/SiteNav';
 import { pingTrialEnded } from './lib/telemetry';
 
@@ -108,7 +108,7 @@ export default function App() {
 				</div>
 				{!isInstalled() && (
 					<button type="button" className="secondary small" onClick={() => setInstallOpen(true)}>
-						Install app
+						{installLabel()}
 					</button>
 				)}
 			</header>
